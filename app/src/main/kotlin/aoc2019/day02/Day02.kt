@@ -1,8 +1,9 @@
 package aoc2019.day02
 
+import aoc2019.day02.Addresses.NOUN
+import aoc2019.day02.Addresses.VERB
 import aoc2019.day02.OpcCode.*
 import aoc2019.toFile
-
 
 /*
 1,0,0,0,99 becomes 2,0,0,0,99 (1 + 1 = 2).
@@ -17,18 +18,44 @@ fun part1(): Int {
         .split(",")
         .map { it.toInt() }
         .toMutableList()
-        .apply { this[1] = 12; this[2] = 2 }
+        .apply { this[NOUN.value] = 12; this[VERB.value] = 2 }
+    println("numbers: $numbers")
+
     val intCodes = numbers
         .windowed(size = 4, step = 4)
-        .map { it.toIntcode() }
+        .map { it.toIntCode() }
         .takeWhile { it.calc(numbers) }
     println("intCodes: $intCodes")
-    println("numbers: $numbers")
+
     return numbers.first()
 }
 
-fun part2(): Long {
-    return 0L
+fun part2(): Int {
+
+    val numbers = "input-day02.txt".toFile()
+        .readLines()
+        .first()
+        .split(",")
+        .map { it.toInt() }
+        .toMutableList()
+    println("numbers: $numbers")
+
+    (0..99).forEach { noun ->
+        (0..99).forEach { verb ->
+            val list = numbers.toMutableList()
+            list.apply { this[NOUN.value] = noun; this[VERB.value] = verb }
+                .windowed(size = 4, step = 4)
+                .map { it.toIntCode() }
+                .takeWhile { it.calc(list) }
+            if (list.first() == 19690720) {
+                println("list: $list")
+                println("noun: $noun")
+                println("verb: $verb")
+                return 100 * noun + verb
+            }
+        }
+    }
+    return 0
 }
 
 fun main() {
@@ -40,17 +67,12 @@ fun main() {
     println("part2: $part2")
 }
 
-fun List<Int>.toIntcode() = IntCode(opCode(), this[1], this[2], this[3])
+fun List<Int>.toIntCode() = IntCode(opCode(), this[1], this[2], this[3])
 
-private fun List<Int>.opCode() = when (this[0]) {
-    1 -> CODE_1
-    2 -> CODE_2
-    99 -> CODE_99
-    else -> throw IllegalArgumentException("Illegal Opcode $this")
-}
+private fun List<Int>.opCode() = OpcCode.fromInt(this[0])
 
 data class IntCode(val opcode: OpcCode, val input1: Int, val input2: Int, val output: Int) {
-    fun calc(numbers: MutableList<Int>) : Boolean {
+    fun calc(numbers: MutableList<Int>): Boolean {
         return when (opcode) {
             CODE_1 -> {
                 numbers[output] = numbers[input1] + numbers[input2]
@@ -65,4 +87,23 @@ data class IntCode(val opcode: OpcCode, val input1: Int, val input2: Int, val ou
     }
 }
 
-enum class OpcCode { CODE_1, CODE_2, CODE_99 }
+enum class OpcCode(val value: Int) {
+    CODE_1(1),
+    CODE_2(2),
+    CODE_99(99);
+
+    companion object {
+        fun fromInt(value: Int) = OpcCode.values().firstOrNull { it.value == value }
+            ?: throw IllegalArgumentException("Illegal OpCode: $value")
+    }
+}
+
+enum class Addresses(val value: Int) {
+    NOUN(1),
+    VERB(2);
+
+    companion object {
+        fun fromInt(value: Int) = Addresses.values().firstOrNull { it.value == value }
+            ?: throw IllegalArgumentException("Illegal Address: $value")
+    }
+}
