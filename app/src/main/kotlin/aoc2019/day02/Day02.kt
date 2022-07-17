@@ -88,6 +88,7 @@ data class IntCode(val opcode: OpcCode, val input1: Int, val input2: Int, val ou
 }
 
 enum class OpcCode(val value: Int) {
+
     CODE_1(1),
     CODE_2(2),
     CODE_99(99);
