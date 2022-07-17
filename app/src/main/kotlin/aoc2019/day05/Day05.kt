@@ -22,7 +22,7 @@ fun part1(): Int {
 
 fun part2(): Int {
 
-    val input = "input-day02.txt".toFile()
+    val input = "input-day05.txt".toFile()
         .readLines()
         .first()
         .split(",")
@@ -51,14 +51,14 @@ class Computer(private val input: MutableList<Int>, private val id: Int) {
 
     fun compute() {
         while (true) {
-            println("instructionPointer: $instructionPointer")
+            // println("instructionPointer: $instructionPointer")
             val number = input[instructionPointer]
             if (!number.hasOpCode()) {
                 throw IllegalStateException("number $number has no valid op code")
             }
 
             val instruction = Instruction.of(number, instructionPointer)
-            println("number $number is $instruction")
+            // println("number $number is $instruction")
 
             if (instruction.opCode.isTerminal) {
                 println("$instruction is terminal instruction")
@@ -69,70 +69,55 @@ class Computer(private val input: MutableList<Int>, private val id: Int) {
         }
     }
 
+    fun diagnosticCode() = output.last()
+
     private fun apply(instruction: Instruction) {
-        val index = instruction.index
-        val firstParam = input[index + 1]
-        println("firstParam: $firstParam")
-        val secondParam = input[index + 2]
-        println("secondParam: $secondParam")
-        val thirdParam = input[index + 3]
-        println("thirdParam: $thirdParam")
-        val parameterModes = instruction.parameterModes
+
         var pointerModified = false
+
         when (instruction.opCode) {
-            OP_CODE_01 -> {
-                val newValue = firstParam(parameterModes, firstParam) + secondParam(parameterModes, secondParam)
-                println("newValue: $newValue")
-                input[thirdParam] = newValue
-            }
-            OP_CODE_02 -> {
-                val newValue = firstParam(parameterModes, firstParam) * secondParam(parameterModes, secondParam)
-                println("newValue: $newValue")
-                input[thirdParam] = newValue
-            }
-            OP_CODE_03 -> input[firstParam] = id
-            OP_CODE_04 -> {
-                val value = firstParam(parameterModes, firstParam)
-                println("OUTPUT: $value")
-                output.add(value)
-            }
+            OP_CODE_01 -> input[param3(instruction)] = param1Value(instruction) + param2Value(instruction)
+            OP_CODE_02 -> input[param3(instruction)] = param1Value(instruction) * param2Value(instruction)
+            OP_CODE_03 -> input[param1(instruction)] = id
+            OP_CODE_04 -> output.add(param1Value(instruction))
             OP_CODE_05 -> {
-                if (firstParam(parameterModes, firstParam) != 0) {
-                    instructionPointer = secondParam(parameterModes, secondParam)
+                if (param1ValueIsNonZero(instruction)) {
+                    instructionPointer = param2Value(instruction)
                     pointerModified = true
                 }
             }
             OP_CODE_06 -> {
-                if (firstParam(parameterModes, firstParam) == 0) {
-                    instructionPointer = secondParam(parameterModes, secondParam)
+                if (param1ValueIsZero(instruction)) {
+                    instructionPointer = param2Value(instruction)
                     pointerModified = true
                 }
             }
-            OP_CODE_07 -> {
-                val lt = firstParam(parameterModes, firstParam) < secondParam(parameterModes, secondParam)
-                input[thirdParam] = if (lt) 1 else 0
-            }
-            OP_CODE_08 -> {
-                val eq = firstParam(parameterModes, firstParam) == secondParam(parameterModes, secondParam)
-                input[thirdParam] = if (eq) 1 else 0
-            }
+            OP_CODE_07 -> input[param3(instruction)] = if (param1IsLessThanParam2(instruction)) 1 else 0
+            OP_CODE_08 -> input[param3(instruction)] = if (param1IsEqualToParam2(instruction)) 1 else 0
             OP_CODE_99 -> {}
         }
         if (!pointerModified) instructionPointer += instruction.parameterModes.size + 1
-        println("input: $input")
+        // println("input: $input")
     }
 
-    private fun secondParam(
-        parameterModes: List<ParameterMode>,
-        secondParam: Int,
-    ) = if (parameterModes[1] == IMMEDIATE_MODE) secondParam else input[secondParam]
+    private fun param1(instruction: Instruction) = input[instruction.index + 1]
+    private fun param3(instruction: Instruction) = input[instruction.index + 3]
 
-    private fun firstParam(
-        parameterModes: List<ParameterMode>,
-        firstParam: Int,
-    ) = if (parameterModes[0] == IMMEDIATE_MODE) firstParam else input[firstParam]
+    private fun paramValue(paramNumber: Int, instruction: Instruction) =
+        if (instruction.parameterModes[paramNumber - 1] == IMMEDIATE_MODE)
+            input[instruction.index + paramNumber] else input[input[instruction.index + paramNumber]]
 
-    fun diagnosticCode() = output.last()
+    private fun param1Value(instruction: Instruction) = paramValue(1, instruction)
+    private fun param2Value(instruction: Instruction) = paramValue(2, instruction)
+
+    private fun param1ValueIsZero(instruction: Instruction) = param1Value(instruction) == 0
+    private fun param1ValueIsNonZero(instruction: Instruction) = param1Value(instruction) != 0
+
+    private fun param1IsEqualToParam2(instruction: Instruction) =
+        param1Value(instruction) == param2Value(instruction)
+
+    private fun param1IsLessThanParam2(instruction: Instruction) =
+        param1Value(instruction) < param2Value(instruction)
 }
 
 enum class OpCode(val value: Int, val isTerminal: Boolean = false, val parameters: Int = 0) {
@@ -149,7 +134,7 @@ enum class OpCode(val value: Int, val isTerminal: Boolean = false, val parameter
     companion object {
         fun of(value: Int) = values().firstOrNull {
             (it.value == value || it.value == value % 10 || it.value == value % 100)
-                    && value.toString().matches(Regex("^(?:(?:([01]+0)*[1-8])|99)\$"))
+                    && value.toString().matches(Regex("^(?:([01]+0)*[1-8]|99)\$"))
         }
             ?: throw IllegalArgumentException("Illegal OpCode: $value")
     }
