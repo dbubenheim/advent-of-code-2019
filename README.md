@@ -1,7 +1,7 @@
 # advent-of-code-2019
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/dbubenheim/advent-of-code-2019?style=for-the-badge) 
-![example workflow](https://github.com/dbubenheim/advent-of-code-2019/actions/workflows/advent-of-code-2019.yml/badge.svg)
+![GitHub Workflow](https://github.com/dbubenheim/advent-of-code-2019/actions/workflows/build.yml/badge.svg)
 ![GitHub](https://img.shields.io/github/license/dbubenheim/advent-of-code-2019?label=license&style=for-the-badge)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/dbubenheim/advent-of-code-2019?style=for-the-badge)
 ![GitHub top language](https://img.shields.io/github/languages/top/dbubenheim/advent-of-code-2019?style=for-the-badge)
